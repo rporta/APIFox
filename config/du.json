@@ -1,0 +1,58 @@
+{
+	"sponsorId": 59,
+	"heartBeatInterval": 120,
+	"batch": 10,
+	"smsSenderInterval": 10,
+	"db": {
+		"getMDS": "opratelinfo.dbo.sp_Select_Presuscripcion",
+		"setMonto": "sp_Insert_SalidaMonto",
+		"heartBeat": "sp_heartbeats",
+		"setMO": "sp_insert_entrada",
+		"getMT": "sp_Select_MsgNextSendTop_DuEau",
+		"setMT": "sp_insert_salida",
+		"isActive": "opratelinfo.dbo.sp_Select_SuscripcionActiva_Paquete",
+		"getActiveSubscription": "opratelinfo.dbo.sp_select_suscripcionactiva_paquete",
+		"getContenidoClave": "opratelCenter.dbo.sp_Select_ContenidoClave",
+		"updateMT": "sp_Update_Salida",
+		"setSubscription": "opratelinfo.dbo.sp_insert_suscripcion",
+		"updateUltimoCobro": "opratelinfo.dbo.sp_Update_UltimoCobro"
+	},
+	"server": {
+		"serviceName": "WS Du - Dubai",
+		"port": 8059,
+		"whitelist": [ "::ffff:127.0.0.1",["::ffff:192.168.1.1","::ffff:192.168.1.253"], ["::ffff:192.168.0.1","::ffff:192.168.0.253"], "::ffff:208.70.188.104", "::ffff:182.74.46.85", "::ffff:182.74.46.86", "::ffff:182.74.46.88", "::ffff:190.246.111.89", "::ffff:52.28.159.31" ],
+		"heartBeatInterval": 120
+	},
+	"redis": {
+        "db": 5
+    },
+	"responseMap": {
+		"SUCCESS": 3,
+		"default": 19
+	},
+	"range": {
+        "start": "01",
+        "end": "23"
+    },
+	"partnerApi": {
+		"common": {
+		    "apiUrl": "api.hera.opratel.com",
+		    "apiPort": "80",
+		    "apiPath": "/billing/addUser",
+		    "apiDeactivatePath": "/billing/deactivateUser",
+		    "apiKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXUyJ9.eyJzdWIiOiIxIiwiYXVkIjoiT3ByYXRlbCIsInllYXIiOiIyMDE1IiwiZXhwIjoiMjUzNDAyMjY0NjI4IiwiaXNzIjoiaHR0cDpcL1wvZGV2MS5hcGkub3ByYXRlbC5jb21cL3Rva2VuIiwiaWF0IjoiMTQzMTY5ODIyOSIsIm5iZiI6IjE0MzE2OTgyMjkiLCJqdGkiOiJmYjlkNDkxNDBjOTMwOGVkNDdhMTYwMzQwZmVlMTIxYyJ9.Yzk3NTQyODQxNTRiOTgzODA0NjE2Yjk3YTI5YTY3ZWJlZDlmODE0ZDZhNjU1YzZmODgyNjFjOGMxOWY3MDYyYQ"
+		},
+		"1157":{	
+		    "urlContenido": "http://www.todosgamers.com/confirm/{SHA1}",
+		    "contenido": "Please complete your profile by entering here {url} Your access code is: {pass}",
+		    "type": "tg",
+		    "enabled": 1
+		},
+		"1158":{	
+		    "urlContenido": "http://www.todosgamers.com/confirm/{SHA1}",
+		    "contenido": "Please complete your profile by entering here {url} Your access code is: {pass}",
+		    "type": "tg",
+		    "enabled": 1
+		}
+    }
+}
