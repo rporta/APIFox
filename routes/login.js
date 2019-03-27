@@ -3,7 +3,6 @@ var async = require('async');
 var express = require('express');
 var router = express.Router();
 var logger, mssql;
-
 router.post('/:product_name', function(req, res, next) {	
 	logger = req.app.locals.logger;
 	mssql = req.app.locals.mssql;
@@ -15,12 +14,14 @@ router.post('/:product_name', function(req, res, next) {
 	 var reqFull = {}
 	 reqFull.body = req.body
 	 reqFull.path = req.params;
+	 reqFull.headers = req.headers;
 	//#1
 
 	asyncResolveLogin(reqFull, (err, rs) => {
 		var response = {};			
 		if (!err){
 			//aca preparar json de respuesta caso exitoso
+
 			response['result'] = {};
 			response.result['login_status'] = 0;
 			response.result['subscriber_status'] = 0;
@@ -28,16 +29,19 @@ router.post('/:product_name', function(req, res, next) {
 			response.result['msisdn'] = "string";
 			response.result['carrier_id'] = 0;
 			response.result['server_response_id'] = "string";
+
 			response['status'] = {};
-			response.status['code'] = 0;
+			response.status['code'] = 1;
 			response.status['description'] = "string";
 
 			res.status(200).send(response);
 		}else{
 			//aca preparar json de respuesta con error
+			
 			response['result'] = {};
+
 			response['status'] = {};
-			response.status['code'] = 0;
+			response.status['code'] = 99;
 			response.status['description'] = "Invalid authorization header";
 			res.status(400).send(response);
 		}
@@ -60,7 +64,7 @@ router.post('/:product_name', function(req, res, next) {
 		: null;
 
 		//valido si los parametros llegaron ok
-		data.body && data.path.product_name
+		data.body && data.path.product_name && data.headers.authorization
 		? cb(null, data)
 		: cb(data, null);
 	},

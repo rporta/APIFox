@@ -11,14 +11,14 @@ var config = require('./config/config');
 
 var logger = new (winston.Logger)({
     transports: [
-        new (winston.transports.Console)({ timestamp: function() { return utils.now(); }, colorize: true, level: 'debug'}),
-        new (winston.transports.File)({ timestamp: function() { return utils.now(); }, filename: 'logs/server_access.log', json: false })
+    new (winston.transports.Console)({ timestamp: function() { return utils.now(); }, colorize: true, level: 'debug'}),
+    new (winston.transports.File)({ timestamp: function() { return utils.now(); }, filename: 'logs/server_access.log', json: false })
     ]
 });
 
 var mssqlLogger = new (winston.Logger)({
     transports: [
-        new (winston.transports.File)({ timestamp: function() { return utils.now(); }, filename: 'logs/server_mssql_access.log', json: false })
+    new (winston.transports.File)({ timestamp: function() { return utils.now(); }, filename: 'logs/server_mssql_access.log', json: false })
     ]
 });
 
@@ -56,17 +56,17 @@ app.locals.mssql = mssql;
 var login = require('./routes/login');
 app.use('/v1/subscriber/login', login);
 
-/*var unsubscribe = require('./routes/unsubscribe');
+var unsubscribe = require('./routes/unsubscribe');
 app.use('/v1/subscriber/unsubscribe', unsubscribe);
 
-var pinRecover = require('./routes/pinRecover');
+var pinRecover = require('./routes/pin-recover');
 app.use('/v1/subscriber/pin-recover', pinRecover);
 
-var mtContent = require('./routes/mtContent');
-app.use('/v1/subscriber/mtContent', mtContent);
+var mtContent = require('./routes/mt-content');
+app.use('/v1/subscriber/mt-content', mtContent);
 
-var bulkMtContent = require('./routes/bulkMtContent');
-app.use('/v1/subscriber/bulk-mt-content', bulkMtContent);*/
+var bulkMtContent = require('./routes/bulk-mt-content');
+app.use('/v1/subscriber/bulk-mt-content', bulkMtContent);
 
 var billingStatus = require('./routes/billing_status');
 app.use('/v1/subscriber/billing_status', billingStatus);
