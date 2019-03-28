@@ -1,13 +1,13 @@
-var dev = true;
 var async = require('async');
 var express = require('express');
 var router = express.Router();
 
-var logger, mssql;
+var logger, mssql, debug;
 
 router.get('/:product_name/:carrier_id/:page_size/:page_number', function(req, res, next) {
 	logger = req.app.locals.logger;
 	mssql = req.app.locals.mssql;
+	debug = req.app.locals.debug;
 
 	/**
 	 * Ramiro Portas : #1
@@ -53,7 +53,7 @@ router.get('/:product_name/:carrier_id/:page_size/:page_number', function(req, r
 	//vector de funciones
 	var ini = [
 	(cb) => {
-		dev
+		debug
 		? logger.debug('asyncResolveBillingStatus(): Execute process... 1') 
 		: null;
 		//valido si los parametros llegaron ok
@@ -62,14 +62,14 @@ router.get('/:product_name/:carrier_id/:page_size/:page_number', function(req, r
 		: cb(data, null);
 	},
 	// (data, cb) => {
-	// 	dev
+	// 	debug
 	// 	? logger.debug('asyncResolveBillingStatus(): Execute process... 2') 
 	// 	: null;
 
 	// 	cb(null, data);
 	// },
 	// (data, cb) => {
-	// 	dev
+	// 	debug
 	// 	? logger.debug('asyncResolveBillingStatus(): Execute process... 3') 
 	// 	: null;
 
@@ -79,7 +79,7 @@ router.get('/:product_name/:carrier_id/:page_size/:page_number', function(req, r
 
 	//funcion final
 	var final = (err, rs) => {
-		dev
+		debug
 		? logger.debug('asyncResolveBillingStatus(): Execute final... ')
 		: null;
 

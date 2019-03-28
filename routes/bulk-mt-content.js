@@ -1,11 +1,13 @@
-var dev = true;
 var async = require('async');
 var express = require('express');
 var router = express.Router();
-var logger, mssql;
+
+var logger, mssql, debug;
+
 router.post('/:product_name', function(req, res, next) {	
 	logger = req.app.locals.logger;
 	mssql = req.app.locals.mssql;
+	debug = req.app.locals.debug;
 
 	/**
 	 * Ramiro Portas : #1
@@ -55,7 +57,7 @@ router.post('/:product_name', function(req, res, next) {
 	//vector de funciones
 	var ini = [
 	(cb) => {
-		dev
+		debug
 		? logger.debug('asyncResolveBulkMtContent(): Execute process... 1') 
 		: null;
 
@@ -65,14 +67,14 @@ router.post('/:product_name', function(req, res, next) {
 		: cb(data, null);
 	},
 	// (data, cb) => {
-	// 	dev
+	// 	debug
 	// 	? logger.debug('asyncResolveBulkMtContent(): Execute process... 2') 
 	// 	: null;
 
 	// 	cb(null, data);
 	// },
 	// (data, cb) => {
-	// 	dev
+	// 	debug
 	// 	? logger.debug('asyncResolveBulkMtContent(): Execute process... 3') 
 	// 	: null;
 
@@ -82,7 +84,7 @@ router.post('/:product_name', function(req, res, next) {
 
 	//funcion final
 	var final = (err, rs) => {
-		dev
+		debug
 		? logger.debug('asyncResolveBulkMtContent(): Execute final... ')
 		: null;
 

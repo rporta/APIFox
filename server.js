@@ -9,12 +9,23 @@ var mssql = require('../libs/mssql');
 
 var config = require('./config/config');
 
-var logger = new (winston.Logger)({
-    transports: [
-    new (winston.transports.Console)({ timestamp: function() { return utils.now(); }, colorize: true, level: 'debug'}),
-    new (winston.transports.File)({ timestamp: function() { return utils.now(); }, filename: 'logs/server_access.log', json: false })
-    ]
-});
+var logger;
+
+if(config.debug){
+    logger = new (winston.Logger)({
+        transports: [
+        new (winston.transports.Console)({ timestamp: function() { return utils.now(); }, colorize: true, level: 'debug'}),
+        new (winston.transports.File)({ timestamp: function() { return utils.now(); }, filename: 'logs/server_access.log', json: false })
+        ]
+    });
+}
+else{
+    logger = new (winston.Logger)({
+        transports: [
+        new (winston.transports.File)({ timestamp: function() { return utils.now(); }, filename: 'logs/server_access.log', json: false })
+        ]
+    });  
+}
 
 var mssqlLogger = new (winston.Logger)({
     transports: [
@@ -52,25 +63,22 @@ http.listen(config.server.port, function(){logger.info('Web Service started on p
 
 app.locals.logger = logger;
 app.locals.mssql = mssql;
+app.locals.debug = config.debug;
 
-var login = require('./routes/login');
-app.use('/v1/subscriber/login', login);
-
-var unsubscribe = require('./routes/unsubscribe');
-app.use('/v1/subscriber/unsubscribe', unsubscribe);
-
-var pinRecover = require('./routes/pin-recover');
-app.use('/v1/subscriber/pin-recover', pinRecover);
-
-var mtContent = require('./routes/mt-content');
-app.use('/v1/subscriber/mt-content', mtContent);
-
-var bulkMtContent = require('./routes/bulk-mt-content');
-app.use('/v1/subscriber/bulk-mt-content', bulkMtContent);
-
-var billingStatus = require('./routes/billing_status');
-app.use('/v1/subscriber/billing_status', billingStatus);
-
+/**
+ * Ramiro Portas: #jj
+ * las rutas se configuran en el siguiente recurso /config/config.json, key (route: Array de obj)
+ * (1) Autoload route
+ */
+ ((route) => {
+    var resolvePath = "./routes/"; 
+    for(var r in route){
+        var dinamic = route[r]['recurso'].replace(/(\-\w)/g, function(m){return m[1].toUpperCase();});
+        eval("var " + dinamic + " = require('" + resolvePath + route[r]['recurso'] + "');");
+        app.use(route[r]['url'], eval(dinamic));
+    }
+})(config.route);
+//#jj
 
 app.use(function(req, res, next){
     res.status(404).send('404: Page not Found');

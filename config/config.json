@@ -4,14 +4,24 @@
 		"database": "opratelcenter",
 		"user": "sa",
 		"password": "millonarios",
-    	"pool": {
-        	"min": 1,
-        	"max": 50,
-        	"idleTimeoutMillis": 30000
-    	}
+		"pool": {
+			"min": 1,
+			"max": 50,
+			"idleTimeoutMillis": 30000
+		}
 	},
 	"server": {
 		"port": 8099,
 		"whitelist": [ "::ffff:127.0.0.1", ["::ffff:192.168.1.1","::ffff:192.168.1.253"], ["::ffff:192.168.2.1","::ffff:192.168.2.253"], ["::ffff:192.168.0.1","::ffff:192.168.0.253"], "::ffff:52.7.233.104" ]
-	}
+	},
+	"debug" : 1,
+	"route" : 
+	[
+		{ "recurso" : "login", "url" : "/v1/subscriber/login" },
+		{ "recurso" : "unsubscribe", "url" : "/v1/subscriber/unsubscribe" },
+		{ "recurso" : "pin-recover", "url" : "/v1/subscriber/pin-recover" },
+		{ "recurso" : "mt-content", "url" : "/v1/subscriber/mt-content" },
+		{ "recurso" : "bulk-mt-content", "url" : "/v1/subscriber/bulk-mt-content" },
+		{ "recurso" : "billing_status", "url" : "/v1/subscriber/billing_status" }
+	]
 }
