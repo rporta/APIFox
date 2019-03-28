@@ -23,10 +23,7 @@ router.get('/:product_name/:carrier_id/:page_size/:page_number', function(req, r
 		if (!err){
 			//aca preparar json de respuesta caso exitoso
 			
-			response['result'] = {};
-			response.result['code'] = 0;
-			response.result['description'] = "string";
-			response.result['server_response_id'] = "string";
+			response['user_id'] = [0];
 
 			response['status'] = {};
 			response.status['code'] = 1;
@@ -35,7 +32,7 @@ router.get('/:product_name/:carrier_id/:page_size/:page_number', function(req, r
 			res.status(200).send(response);
 		}else{
 			//aca preparar json de respuesta con error
-			response['result'] = {};
+			response['user_id'] = [];
 			
 			response['status'] = {};
 			response.status['code'] = 99;
