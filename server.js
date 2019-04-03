@@ -6,6 +6,7 @@ var ipfilter = require('express-ipfilter');
 var winston = require('winston');
 var utils = require('../libs/utils');
 var mssql = require('../libs/mssql');
+var redis = require('../libs/redis');
 
 var config = require('./config/config');
 
@@ -33,17 +34,16 @@ var mssqlLogger = new (winston.Logger)({
     ]
 });
 
-/*var redisLogger = new (winston.Logger)({
+var redisLogger = new (winston.Logger)({
     transports: [
         // new (winston.transports.Console)({ timestamp: function() { return utils.now(); }, colorize: true, level: 'debug'}),
         new (winston.transports.File)({ timestamp: function() { return utils.now(); }, filename: 'logs/server_redis_access.log', json: false })
-    ]
-});*/
+        ]
+    });
 
-/*redis.setConfig(config);
+redis.setConfig(config);
 redis.setLogger(redisLogger);
-redis.init();*/
-
+redis.init();
 
 mssql.setConfig(config.mssql);
 mssql.setLogger(mssqlLogger);
@@ -64,6 +64,7 @@ http.listen(config.server.port, function(){logger.info('Web Service started on p
 app.locals.logger = logger;
 app.locals.mssql = mssql;
 app.locals.debug = config.debug;
+app.locals.redis = redis;
 
 /**
  * Ramiro Portas: #jj
