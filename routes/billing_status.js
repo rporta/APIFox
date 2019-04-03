@@ -54,7 +54,7 @@ router.get('/:product_name/:carrier_id/:page_size/:page_number', function(req, r
 	var ini = [
 	(cb) => {
 		debug
-		? logger.debug('asyncResolveBillingStatus(): Execute process... 1') 
+		? logger.debug('asyncResolveBulkMtContent(): Execute process... 1 [VALIDAR PARAMETROS]') 
 		: null;
 		//valido si los parametros llegaron ok
 		data.body && data.path.product_name && data.path.carrier_id && data.path.page_size && data.path.page_number && data.headers.authorization

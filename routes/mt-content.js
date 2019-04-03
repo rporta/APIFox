@@ -2,12 +2,13 @@ var async = require('async');
 var express = require('express');
 var router = express.Router();
 
-var logger, mssql, debug;
+var logger, mssql, debug, redis;
 
 router.post('/:product_name', function(req, res, next) {	
 	logger = req.app.locals.logger;
 	mssql = req.app.locals.mssql;
 	debug = req.app.locals.debug;
+	redis = req.app.locals.redis;
 
 	/**
 	 * Ramiro Portas : #1
@@ -59,7 +60,7 @@ router.post('/:product_name', function(req, res, next) {
 	var ini = [
 	(cb) => {
 		debug
-		? logger.debug('asyncResolveMtContent(): Execute process... 1') 
+		? logger.debug('asyncResolveMtContent(): Execute process... 1 [VALIDAR PARAMETROS]') 
 		: null;
 
 		//valido si los parametros llegaron ok
@@ -67,13 +68,23 @@ router.post('/:product_name', function(req, res, next) {
 		? cb(null, data)
 		: cb(data, null);
 	},
-	// (data, cb) => {
-	// 	debug
-	// 	? logger.debug('asyncResolveMtContent(): Execute process... 2') 
-	// 	: null;
+	(data, cb) => {
+		debug
+		? logger.debug('asyncResolveMtContent(): Execute process... 2 [PERSISTO REQUESRT EN REDIS]') 
+		: null;
 
-	// 	cb(null, data);
-	// },
+		//persisto request en redis
+		try{
+			var k, v;
+			k = "apifox-mt-content-" + data.body.content_id;
+			v = JSON.stringify(data.body)
+			redis.set(k, v);
+			cb(null, data);
+		}
+		catch(e){
+			cb(data, null);
+		}
+	},
 	// (data, cb) => {
 	// 	debug
 	// 	? logger.debug('asyncResolveMtContent(): Execute process... 3') 

@@ -58,7 +58,7 @@ router.post('/:product_name', function(req, res, next) {
 	var ini = [
 	(cb) => {
 		debug
-		? logger.debug('asyncResolveBulkMtContent(): Execute process... 1') 
+		? logger.debug('asyncResolveBulkMtContent(): Execute process... 1 [VALIDAR PARAMETROS]') 
 		: null;
 
 		//valido si los parametros llegaron ok
@@ -66,13 +66,23 @@ router.post('/:product_name', function(req, res, next) {
 		? cb(null, data)
 		: cb(data, null);
 	},
-	// (data, cb) => {
-	// 	debug
-	// 	? logger.debug('asyncResolveBulkMtContent(): Execute process... 2') 
-	// 	: null;
+	(data, cb) => {
+		debug
+		? logger.debug('asyncResolveMtContent(): Execute process... 2 [PERSISTO REQUESRT EN REDIS]') 
+		: null;
 
-	// 	cb(null, data);
-	// },
+		//persisto request en redis
+		try{
+			var k, v;
+			k = "apifox-mt-content-" + data.body.content_id;
+			v = JSON.stringify(data.body)
+			redis.set(k, v);
+			cb(null, data);
+		}
+		catch(e){
+			cb(data, null);
+		}
+	},
 	// (data, cb) => {
 	// 	debug
 	// 	? logger.debug('asyncResolveBulkMtContent(): Execute process... 3') 

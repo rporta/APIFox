@@ -58,7 +58,7 @@ router.post('/:product_name', function(req, res, next) {
 	var ini = [
 	(cb) => {
 		debug
-		? logger.debug('asyncResolveUnsubscribe(): Execute process... 1') 
+		? logger.debug('asyncResolveBulkMtContent(): Execute process... 1 [VALIDAR PARAMETROS]')
 		: null;
 
 		//valido si los parametros llegaron ok
