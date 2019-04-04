@@ -1,7 +1,16 @@
 var async = require('async');
 var redis = require('../libs/redis');
 var config = require('./config/config');
+var winston = require('winston');
+var utils = require('../libs/utils');
 var debug = config.debug;
+
+var redisLogger = new (winston.Logger)({
+	transports: [
+        // new (winston.transports.Console)({ timestamp: function() { return utils.now(); }, colorize: true, level: 'debug'}),
+        new (winston.transports.File)({ timestamp: function() { return utils.now(); }, filename: 'logs/server_redis_access.log', json: false })
+        ]
+    });
 
 redis.setConfig(config);
 redis.setLogger(redisLogger);
@@ -11,7 +20,7 @@ redis.init();
  * Ramiro Portas : #ff
  * (1) cada 60000ms = 1m ejecuto asyncResolveMtContent
  */
- setinterval(asyncResolveMtContent(null, (err, rs) => {
+ setinterval(asyncResolveProcessMtContent(null, (err, rs) => {
  	var response = {};			
  	if (!err){
 
