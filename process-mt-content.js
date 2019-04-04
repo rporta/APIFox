@@ -16,20 +16,24 @@ redis.setConfig(config);
 redis.setLogger(redisLogger);
 redis.init();
 
-/**
- * Ramiro Portas : #ff
- * (1) cada 60000ms = 1m ejecuto asyncResolveMtContent
- */
- setinterval(asyncResolveProcessMtContent(null, (err, rs) => {
- 	var response = {};			
- 	if (!err){
+var logger;
 
- 	}
- 	else{
+if(debug){
+	logger = new (winston.Logger)({
+		transports: [
+		new (winston.transports.Console)({ timestamp: function() { return utils.now(); }, colorize: true, level: 'debug'}),
+		new (winston.transports.File)({ timestamp: function() { return utils.now(); }, filename: 'logs/server_access.log', json: false })
+		]
+	});
+}
+else{
+	logger = new (winston.Logger)({
+		transports: [
+		new (winston.transports.File)({ timestamp: function() { return utils.now(); }, filename: 'logs/server_access.log', json: false })
+		]
+	});  
+}
 
- 	}
- }), 60000);
-//#ff
 
 /**
  * Ramiro Portas : Funcion que implementa async.waterfall
@@ -46,12 +50,9 @@ redis.init();
 		? logger.debug('asyncResolveProcessMtContent(): Execute process... 1 [CONSULO EN REDIS]') 
 		: null;
 		
-		//persisto request en redis
+		//consulto en redis
 		try{
-			var k, v;
-			k = "apifox-mt-content-" + data.body.content_id;
-			v = JSON.stringify(data.body)
-			redis.set(k, v);
+			var rs;
 			cb(null, data);
 		}
 		catch(e){
@@ -92,3 +93,20 @@ redis.init();
 	//registro vector funciones, funcion final
 	async.waterfall(ini, final);	
 }
+
+/**
+ * Ramiro Portas : #ff
+ * (1) cada 60000 ms = 1m ejecuto asyncResolveProcessMtContent
+ */
+ setInterval(() => {
+ 	asyncResolveProcessMtContent(null, (err, rs) => {
+ 		var response = {};			
+ 		if (!err){
+ 			logger.debug('asyncRcesolveProcessMtContent(): Execute cb rs... ');
+ 		}
+ 		else{
+ 			logger.debug('asyncResolveProcessMtContent(): Execute cb err... ');
+ 		}
+ 	});
+ }, 60000);
+//#ff
