@@ -413,31 +413,23 @@ opradb.setLogger(mssqlLogger);
 	async.waterfall(ini, final);	
 }
 
+
 /**
- * Ramiro Portas : #ff
- * (1) Ejecuto asyncResolveProcessMtContent
- * (2) cada 60000 ms = 1m ejecuto asyncResolveProcessMtContent
- */
- (() => {
- 	asyncResolveProcessMtContent(null, (err, rs) => {
- 		var response = {};			
- 		if (!err){
- 			logger.debug('callback rs : ' + JSON.stringify(rs));
- 		}
- 		else{
- 			logger.debug('callback err');
- 		}
- 	});
- 	setInterval(() => {
- 		asyncResolveProcessMtContent(null, (err, rs) => {
- 			var response = {};			
- 			if (!err){
- 				logger.debug('callback rs : ' + JSON.stringify(rs));
- 			}
- 			else{
- 				logger.debug('callback err');
- 			}
- 		});
- 	}, 5000);
- })(null);
-//#ff
+//  * Ramiro Portas : #ff
+//  * (1) Ejecuto asyncResolveProcessMtContent, to forever
+//  */
+(() => {
+	async.forever(function(next){
+		asyncResolveProcessMtContent(null, (err, rs) => {
+			var response = {};			
+			if (!err){
+				logger.debug('callback rs : ' + JSON.stringify(rs));
+			}
+			else{
+				logger.debug('callback err');
+			}
+			next();
+		});		
+	});
+})(null);
+// //#ff
