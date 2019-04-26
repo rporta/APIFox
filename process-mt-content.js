@@ -145,7 +145,40 @@ opradb.setLogger(mssqlLogger);
 		});
 	},
 	(data, cb) => {
-		//step 3 recorro request, armo vector con params opradb.isActive
+		//step 3 recorro keys y las elimino de redis
+		(function update(cantError){
+			data.step ++;
+			data.code -= data.cantError;
+			data.cantError = cantError || 0;
+		})(1);
+
+		debug
+		? logger.debug('step' + data.step + ' : recorro keys y las elimino de redis')
+		: null;
+
+		for(var h in data.keys){
+			var currentKey = data.keys[h];
+
+			//borro key
+			try{
+				redis.del(currentKey);
+
+				(data.keys.length -1 == h)
+				? cb(false, data)
+				: null;
+			}
+			catch(e){
+				(function error(error){
+					data.code --;
+					mensajeDefaut = 'Error en step(' + data.step + '), code: ' + data.code;
+					data.error = error || mensajeDefaut;
+				})("Error (redis): al borra key");
+				cb(true, data);
+			}
+		}
+	},
+	(data, cb) => {
+		//step 4 recorro request, armo vector con params opradb.isActive
 		(function update(cantError){
 			data.step ++;
 			data.code -= data.cantError;
@@ -235,7 +268,7 @@ opradb.setLogger(mssqlLogger);
 		});
 	},	
 	(data, cb) => {
-		//step 4 Recorro vector paramIsActive, ejecuto query opradb.isActive, armo vector de rs
+		//step 5 Recorro vector paramIsActive, ejecuto query opradb.isActive, armo vector de rs
 		(function update(cantError){
 			data.step ++;
 			data.code -= data.cantError;
@@ -276,7 +309,7 @@ opradb.setLogger(mssqlLogger);
 		});
 	},
 	(data, cb) => {
-		//step 5 Recorro vector rsIsActive, preparo parametros para MT
+		//step 6 Recorro vector rsIsActive, preparo parametros para MT
 		(function update(cantError){
 			data.step ++;
 			data.code -= data.cantError;
@@ -326,7 +359,7 @@ opradb.setLogger(mssqlLogger);
 		}
 	},
 	(data, cb) => {
-		//step 6 Recorro vector con parametros para query MT y ejecuto query
+		//step 7 Recorro vector con parametros para query MT y ejecuto query
 		(function update(cantError){
 			data.step ++;
 			data.code -= data.cantError;
@@ -360,39 +393,6 @@ opradb.setLogger(mssqlLogger);
 			cb(false, data)
 		});
 	},
-	(data, cb) => {
-		//step 7 recorro keys y las elimino de redis
-		(function update(cantError){
-			data.step ++;
-			data.code -= data.cantError;
-			data.cantError = cantError || 0;
-		})(1);
-
-		debug
-		? logger.debug('step' + data.step + ' : recorro keys y las elimino de redis')
-		: null;
-
-		for(var h in data.keys){
-			var currentKey = data.keys[h];
-
-			//borro key
-			try{
-				redis.del(currentKey);
-
-				(data.keys.length -1 == h)
-				? cb(false, data)
-				: null;
-			}
-			catch(e){
-				(function error(error){
-					data.code --;
-					mensajeDefaut = 'Error en step(' + data.step + '), code: ' + data.code;
-					data.error = error || mensajeDefaut;
-				})("Error (redis): al borra key");
-				cb(true, data);
-			}
-		}
-	},
 	];
 
 	//funcion final
@@ -415,21 +415,30 @@ opradb.setLogger(mssqlLogger);
 
 
 /**
-//  * Ramiro Portas : #ff
-//  * (1) Ejecuto asyncResolveProcessMtContent, to forever
-//  */
-(() => {
-	async.forever(function(next){
-		asyncResolveProcessMtContent(null, (err, rs) => {
-			var response = {};			
-			if (!err){
-				logger.debug('callback rs : ' + JSON.stringify(rs));
-			}
-			else{
-				logger.debug('callback err');
-			}
-			next();
-		});		
-	});
-})(null);
-// //#ff
+ * Ramiro Portas : #ff
+ * (1) Ejecuto asyncResolveProcessMtContent
+ * (2) cada 60000 ms = 1m ejecuto asyncResolveProcessMtContent
+ */
+ (() => {
+ 	asyncResolveProcessMtContent(null, (err, rs) => {
+ 		var response = {};			
+ 		if (!err){
+ 			logger.debug('callback rs : ' + JSON.stringify(rs));
+ 		}
+ 		else{
+ 			logger.debug('callback err');
+ 		}
+ 	});
+ 	setInterval(() => {
+ 		asyncResolveProcessMtContent(null, (err, rs) => {
+ 			var response = {};			
+ 			if (!err){
+ 				logger.debug('callback rs : ' + JSON.stringify(rs));
+ 			}
+ 			else{
+ 				logger.debug('callback err');
+ 			}
+ 		});
+ 	}, config.interval);
+ })(null);
+//#ff 
