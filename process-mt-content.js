@@ -1,9 +1,16 @@
 var async = require('async');
 var redis = require('./libs/redis');
+var opradb = require('./libs/opradb');
 var config = require('./config/config');
 var winston = require('winston');
 var utils = require('../libs/utils');
+var mssql = require('../libs/mssql');
+var request = require('request');
 var debug = config.debug;
+var productMap = config.productMap;
+var countryInfo = config.countryInfo;
+var authorization = config.authorization;
+var processMtContent = config.processMtContent;
 
 var redisLogger = new (winston.Logger)({
 	transports: [
@@ -34,6 +41,19 @@ else{
 	});  
 }
 
+var mssqlLogger = new (winston.Logger)({
+	transports: [
+	new (winston.transports.File)({ timestamp: function() { return utils.now(); }, filename: 'logs/server_mssql_access.log', json: false })
+	]
+});
+
+mssql.setConfig(config.mssql);
+mssql.setLogger(mssqlLogger);
+mssql.init();
+
+opradb.setOperator(config);
+opradb.setDB(mssql);
+opradb.setLogger(mssqlLogger);
 
 /**
  * Ramiro Portas : Funcion que implementa async.waterfall
@@ -46,101 +66,347 @@ else{
 	//vector de funciones
 	var ini = [
 	(cb) => {
+		//step 1 consulto keys en redis
+		(function ini(step, code, cantError){
+			data = data ? data : {}; 
+			data.step = step || 1;
+			data.code = code || 99;
+			data.cantError = cantError || 0;
+		})(null, null, 1);
+
 		debug
-		? logger.debug('asyncResolveProcessMtContent(): Execute process... 1 [CONSULO KEYS EN REDIS]') 
+		? logger.debug('step' + data.step + ' : Consulto keys en redis y armo vector key') 
 		: null;
 		
+		//key necesaria para step 4, 5
+		data.rsIsActive = new Array();
+
 		//consulto en redis
 		try{
-			redis.keys('apifox-mt-content-*', (err, rs) => {
+			redis.keys('apifox-*', (err, rs) => {
 				!err
-				? cb(null, rs)
-				: cb(err, null);
+				? (() => {
+					data.keys = rs;
+					cb(false, data);
+				})()
+				: (() => {
+					(function error(error){
+						data.code --;
+						mensajeDefaut = 'Error en step(' + data.step + '), code: ' + data.code;
+						data.error = error || mensajeDefaut;
+					})("Error redis : al consultar keys (apifox-mt-content-*)");
+					cb(true, data);
+				})();
 			});
 		}
 		catch(e){
-			cb(data, null);
+			(function error(error){
+				data.code --;
+				mensajeDefaut = 'Error en step(' + data.step + '), code: ' + data.code;
+				data.error = error || mensajeDefaut;
+			})("Error try (redis): al consultar keys");
+
+			cb(true, data);
 		}
 	},
-	(keys, cb) => {
+	(data, cb) => {
+		//step 2 recorro vector key, consulto key en redis, armo vector request
+		(function update(cantError){
+			data.step ++;
+			data.code -= data.cantError;
+			data.cantError = cantError || 0;
+		})(1);
+
 		debug
-		? logger.debug('asyncResolveProcessMtContent(): Execute process... 2 [RECORRO KEYS Y CONSULTO KEY EN REDIS]') 
+		? logger.debug('step' + data.step + ' : Recorro vector keys, armo vector request')
 		: null;
 
-		keys.forEach(function (key, i) {
-			redis.get(key, function(data){
-				data === false
-				? cb(data, null)
+		data.redisGetRequest = new Array();
+		data.keys.forEach(function (key, i) {
+			redis.get(key, function(dataRs){
+				dataRs = JSON.parse(dataRs);
+				dataRs === false
+				? (() => {
+					(function error(error){
+						data.code --;
+						mensajeDefaut = 'Error en step(' + data.step + '), code: ' + data.code;
+						data.error = error || mensajeDefaut;
+					})("Error (redis): al consultar key");
+					cb(true, data);
+				}())
 				: (() => {
-					// debug
-					// ? logger.debug('key : ' + key + ', data : ' + data + ', content_id : ' + JSON.parse(data).content_id ) 
-					// : null;
-					
-					data = JSON.parse(data);
+					data.redisGetRequest.push(dataRs);
 
-					if(data.data_option_1){
-						//un mensaje a muchos user_ids
-						debug
-						? logger.debug('un mensaje a muchos user_ids : ' + JSON.stringify(data.data_option_1)) 
-						: null;
-
-						for(var j in data.data_option_1.user_ids){
-							var user_id = data.data_option_1.user_ids[j];
-							var text = data.data_option_1.text;
-
-							//resolver 1
-						}
-					}
-					else if(data.data_option_2){		
-						//un vector de objetos (user_id, text)
-						debug
-						? logger.debug('un vector de objetos (user_id, text) : ' + JSON.stringify(data.data_option_2)) 
-						: null;
-
-						for(var j in data.data_option_2){
-							var obj = data.data_option_2[j];
-							var user_id = obj.user_id;
-							var text = obj.text;
-
-							//resolver 2
-						}
-					}
-
-					(keys.length -1 == i)
-					? cb(null, null)
+					(data.keys.length -1 == i)
+					? cb(false, data)
 					: null;
 				}());
 			});
 		});
 	},
-	// (data, cb) => {
-	// 	debug
-	// 	? logger.debug('asyncResolveProcessMtContent(): Execute process... 3') 
-	// 	: null;
+	(data, cb) => {
+		//step 3 recorro request, armo vector con params opradb.isActive
+		(function update(cantError){
+			data.step ++;
+			data.code -= data.cantError;
+			data.cantError = cantError || 0;
+		})(0);
 
-	// 	cb(null, data);
-	// },	// (data, cb) => {
-	// 	debug
-	// 	? logger.debug('asyncResolveProcessMtContent(): Execute process... 4') 
-	// 	: null;
+		debug
+		? logger.debug('step' + data.step + ' : Recorro vector redisGetRequest, armo vector con params para opradb.isActive')
+		: null;
 
-	// 	cb(null, data);
-	// },
+		data.paramIsActive = new Array();
+
+		async.eachSeries(data.redisGetRequest, function(currentRequest, next){
+			// logger.debug('Item: ' + JSON.stringify(currentRequest));
+			if(currentRequest.body.data_option_1){
+				//un mensaje a muchos user_ids
+				for(var f in currentRequest.body.data_option_1.user_ids){
+					
+					var user_id = currentRequest.body.data_option_1.user_ids[f];
+					var text = currentRequest.body.data_option_1.text;
+
+					//preaparo params para la query 'opradb.isActive'
+					var pia = {};
+					pia.paqueteid = productMap[currentRequest.path.product_name].paqueteid;
+					pia.suscripcionid = user_id;
+					pia.text = text;
+					data.paramIsActive.push(pia);
+				}
+				return next();
+			}
+			else if(currentRequest.body.data_option_2){
+				//un vector de objetos (user_id, text)
+				for(var j in currentRequest.body.data_option_2){
+					var obj = currentRequest.body.data_option_2[j];
+					var user_id = obj.user_id;
+					var text = obj.text;
+
+					//preaparo params para la query 'opradb.isActive'
+					var pia = {};
+					pia.paqueteid = productMap[currentRequest.path.product_name].paqueteid;
+					pia.suscripcionid = user_id;
+					pia.text = text;
+					data.paramIsActive.push(pia);
+				}
+				return next();
+			}
+			else if(currentRequest.body.carrier_id.constructor.name === 'Number'){
+				//(bulk-mt) : ejecuto la query 'opradb.billingStatus', preaparo params para la query 'opradb.isActive'
+				var paramsBillingStatus = {};
+				paramsBillingStatus.sponsorid = countryInfo[currentRequest.body.carrier_id].sponsorId;
+				paramsBillingStatus.paqueteid = productMap[currentRequest.path.product_name].paqueteid; 
+				paramsBillingStatus.interval = countryInfo[currentRequest.body.carrier_id].interval;
+				paramsBillingStatus.top = processMtContent.top;// page_size --aca va 10.000 by Benja, se cambia a 100 poner en config
+				// logger.debug('postRequest: ' + JSON.stringify(paramsBillingStatus));
+				opradb.billingStatus(paramsBillingStatus, (err, rs) => {
+
+					rs.subscription !== false
+					? (() => {
+						// logger.debug('billingStatusRs RS  :  \n\n' + JSON.stringify(rs) + '\n\n')
+						for (var jj in rs.subscription){
+							// logger.debug('current : ' + JSON.stringify(rs.subscription[jj]));
+							var newRs = {};
+							newRs.paqueteid = rs.paqueteid;
+							newRs.suscripcionid = rs.subscription[jj].SuscripcionId;
+							newRs.text = currentRequest.body.message;
+							newRs.subscription = rs.subscription[jj];
+
+							//preparo para step 5 (Recorro vector rsIsActive, preparo parametros para MT)
+							data.rsIsActive.push(newRs);
+						}
+						return next();
+					})()
+					: (() => {
+						//no llegaron los parametros, envio los datos a funcion final con error
+						(function error(error){
+							data.code --;
+							mensajeDefaut = 'Error en step(' + data.step + '), code: ' + data.code;
+							data.error = error || mensajeDefaut;
+						})("Error db : problema al ejecutar opradb.billingStatus");
+						return next();
+					})();
+				});
+			}	
+		},
+		() => {
+			cb(false, data)
+		});
+	},	
+	(data, cb) => {
+		//step 4 Recorro vector paramIsActive, ejecuto query opradb.isActive, armo vector de rs
+		(function update(cantError){
+			data.step ++;
+			data.code -= data.cantError;
+			data.cantError = cantError || 0;
+		})(1);
+
+		debug
+		? logger.debug('step' + data.step + ' : Recorro vector paramIsActive, ejecuto query opradb.isActive, armo vector con parametros para query MT')
+		: null;
+
+		//ejecuto la query 'opradb.isActive'
+		async.eachSeries(data.paramIsActive,function(currentParamIsActive, next){
+			opradb.isActive(currentParamIsActive, (err, rs) => {
+				!err
+				? (() => {
+					rs.subscription
+					? (() => {
+						// logger.debug('currentParamIsActive : ' + JSON.stringify(currentParamIsActive) + '\n');
+						rs.text = currentParamIsActive.text;
+						//preparo vector rsIsActive
+						data.rsIsActive.push(rs);
+					})()
+					: null;
+					return next();
+				})()
+				: (() => {
+					(function error(error){
+						data.code --;
+						mensajeDefaut = 'Error en step(' + data.step + '), code: ' + data.code;
+						data.error = error || mensajeDefaut;
+					})("Error db : problema al ejecutar opradb.isActive");
+					cb(true, data);
+				})();
+			});
+		},
+		() => {
+			cb(false, data)
+		});
+	},
+	(data, cb) => {
+		//step 5 Recorro vector rsIsActive, preparo parametros para MT
+		(function update(cantError){
+			data.step ++;
+			data.code -= data.cantError;
+			data.cantError = cantError || 0;
+		})(0);
+
+		debug
+		? logger.debug('step' + data.step + ' : Recorro vector rsIsActive, preparo vector parametros para MT')
+		: null;
+
+		if (data.rsIsActive.length === 0) {
+			//hay error
+			(function error(error){
+				data.code --;
+				mensajeDefaut = 'Error en step(' + data.step + '), code: ' + data.code;
+				data.error = error || mensajeDefaut;
+			})("Error parametrosMT : data.rsIsActive.length === 0 ");
+			cb(true, data);
+		}
+		else{
+			data.paramInsertMT = new Array();
+			for(var l in data.rsIsActive){
+				var currentRsIsActive = data.rsIsActive[l];
+				logger.debug('rsIsActive : ' + JSON.stringify(currentRsIsActive) + '\n');
+				var paramMT = {};
+				//paramMT.entradaid = null;
+				paramMT.shortcode = currentRsIsActive.subscription.Destino;
+				paramMT.msisdn = currentRsIsActive.subscription.Origen;
+				paramMT.aplicacionid = currentRsIsActive.subscription.AplicacionId;
+				paramMT.medioid = currentRsIsActive.subscription.MedioId;
+				paramMT.contenido = currentRsIsActive.text;
+				// paramMT.nocharge = 0;
+				// paramMT.estadoesid = 3;
+				paramMT.suscripcionid = currentRsIsActive.subscription.SuscripcionId;
+				// paramMT.mds = 0;
+				// paramMT.prioridad = 5;
+				paramMT.sponsorid = currentRsIsActive.subscription.SponsorId;
+				// paramMT.rebotado = 0;
+
+				data.paramInsertMT.push(paramMT);
+				logger.debug('paramMT : ' + JSON.stringify(paramMT) + '\n');
+
+				(data.rsIsActive.length -1 == l)
+				? cb(false, data)
+				: null;
+			}
+		}
+	},
+	(data, cb) => {
+		//step 6 Recorro vector con parametros para query MT y ejecuto query
+		(function update(cantError){
+			data.step ++;
+			data.code -= data.cantError;
+			data.cantError = cantError || 0;
+		})(1);
+
+		debug
+		? logger.debug('step' + data.step + ' : Recorro vector con parametros para query MT, ejecuto query MT')
+		: null;
+
+		async.eachSeries(data.paramInsertMT, function(currentParamInsertMT, next){
+			// logger.debug('currentParamInsertMT : ' + JSON.stringify(currentParamInsertMT) + '\n');
+			opradb.insertMT(currentParamInsertMT, (err, rs) => {
+				!err
+				? (() => {
+					//no hay error
+					return next();
+				})()
+				: (() => {
+					//hay error
+					(function error(error){
+						data.code --;
+						mensajeDefaut = 'Error en step(' + data.step + '), code: ' + data.code;
+						data.error = error || mensajeDefaut;
+					})("Error db : problema al ejecutar opradb.insertMT");
+					cb(true, data);
+				})();
+			});
+		},
+		() => {
+			cb(false, data)
+		});
+	},
+	(data, cb) => {
+		//step 7 recorro keys y las elimino de redis
+		(function update(cantError){
+			data.step ++;
+			data.code -= data.cantError;
+			data.cantError = cantError || 0;
+		})(1);
+
+		debug
+		? logger.debug('step' + data.step + ' : recorro keys y las elimino de redis')
+		: null;
+
+		for(var h in data.keys){
+			var currentKey = data.keys[h];
+
+			//borro key
+			try{
+				redis.del(currentKey);
+
+				(data.keys.length -1 == h)
+				? cb(false, data)
+				: null;
+			}
+			catch(e){
+				(function error(error){
+					data.code --;
+					mensajeDefaut = 'Error en step(' + data.step + '), code: ' + data.code;
+					data.error = error || mensajeDefaut;
+				})("Error (redis): al borra key");
+				cb(true, data);
+			}
+		}
+	},
 	];
 
 	//funcion final
-	var final = (err, rs) => {
-		debug
-		? logger.debug('asyncResolveProcessMtContent(): Execute final... ')
+	var final = (err, data) => {
+		debug 
+		? logger.debug('Final')
 		: null;
 
 		err
 		? (() => {
-			logger.debug('asyncResolveProcessMtContent(): Error final... ');
-			console.log(err);
-			cb(err, rs);
+			logger.debug('Error final step(' + data.step + '): ' + data.error);
+			cb(true, data);
 		})()
-		: cb(err, rs);
+		: cb(false, data);
 	};
 
 	//registro vector funciones, funcion final
@@ -156,22 +422,22 @@ else{
  	asyncResolveProcessMtContent(null, (err, rs) => {
  		var response = {};			
  		if (!err){
- 			logger.debug('asyncRcesolveProcessMtContent(): Execute cb rs... ' + rs);
+ 			logger.debug('callback rs : ' + JSON.stringify(rs));
  		}
  		else{
- 			logger.debug('asyncResolveProcessMtContent(): Execute cb err... ');
+ 			logger.debug('callback err');
  		}
  	});
  	setInterval(() => {
  		asyncResolveProcessMtContent(null, (err, rs) => {
  			var response = {};			
  			if (!err){
- 				logger.debug('asyncRcesolveProcessMtContent(): Execute cb rs... ' + rs);
+ 				logger.debug('callback rs : ' + JSON.stringify(rs));
  			}
  			else{
- 				logger.debug('asyncResolveProcessMtContent(): Execute cb err... ');
+ 				logger.debug('callback err');
  			}
  		});
- 	}, 1000);
+ 	}, 5000);
  })(null);
 //#ff

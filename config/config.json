@@ -1,4 +1,18 @@
 {
+	"mw": {
+		"protocolo" : "http://",
+		"host" : "api.hera.opratel.com",
+		"port" : "80",
+		"path" : "unsubscribe",
+		"method" : "POST",
+		"apiKey" : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXUyJ9.eyJzdWIiOiIxIiwiYXVkIjoiT3ByYXRlbCIsInllYXIiOiIyMDE1IiwiZXhwIjoiMjUzNDAyMjY0NjI4IiwiaXNzIjoiaHR0cDpcL1wvZGV2MS5hcGkub3ByYXRlbC5jb21cL3Rva2VuIiwiaWF0IjoiMTQzMTY5ODIyOSIsIm5iZiI6IjE0MzE2OTgyMjkiLCJqdGkiOiJmYjlkNDkxNDBjOTMwOGVkNDdhMTYwMzQwZmVlMTIxYyJ9.Yzk3NTQyODQxNTRiOTgzODA0NjE2Yjk3YTI5YTY3ZWJlZDlmODE0ZDZhNjU1YzZmODgyNjFjOGMxOWY3MDYyYQ"
+	},
+	"authorization" : {
+		"type" : "Basic",
+		"user" : "ufafa",
+		"password" : "pfafa",
+		"apiKey" : "dWZhZmE6cGZhZmE="
+	},
 	"mssql": {
 		"server": "zeus",
 		"database": "opratelcenter",
@@ -16,16 +30,86 @@
 	},
 	"server": {
 		"port": 8099,
-		"whitelist": [ "::ffff:127.0.0.1", ["::ffff:192.168.1.1","::ffff:192.168.1.253"], ["::ffff:192.168.2.1","::ffff:192.168.2.253"], ["::ffff:192.168.0.1","::ffff:192.168.0.253"], "::ffff:52.7.233.104" ]
+		"whitelist": [ "::ffff:127.0.0.1", ["::ffff:192.168.1.1","::ffff:192.168.1.253"], ["::ffff:192.168.2.1","::ffff:192.168.2.253"], ["::ffff:192.168.0.1","::ffff:192.168.0.253"], ["::ffff:190.92.13.1","::ffff:190.92.13.253"], "::ffff:52.7.233.104", "::ffff:190.210.254.89"]
 	},
-	"debug" : 1,
-	"route" : 
-	[
+
+
+
+	"db": {
+		"heartBeat": "sp_heartbeats",
+		"setMO": "sp_insert_entrada",
+		"setMT": "sp_insert_salida",
+		"isActive": "opratelinfo.dbo.sp_APIFOX_select_suscripcionactiva_paquete",
+		"billingStatus": "opratelinfo.dbo.sp_APIFOX_select_usuariosconcobros"
+	},
+	"route": [
 		{ "recurso" : "login", "url" : "/v1/subscriber/login" },
 		{ "recurso" : "unsubscribe", "url" : "/v1/subscriber/unsubscribe" },
 		{ "recurso" : "pin-recover", "url" : "/v1/subscriber/pin-recover" },
 		{ "recurso" : "mt-content", "url" : "/v1/subscriber/mt-content" },
 		{ "recurso" : "bulk-mt-content", "url" : "/v1/subscriber/bulk-mt-content" },
 		{ "recurso" : "billing_status", "url" : "/v1/subscriber/billing_status" }
-	]
+	],
+	"productMap": {
+		"fsg": {
+			"paqueteid_new": "796",
+			"paqueteid": "811",
+			"aplicacionid": "1163"
+		},
+		"foxfans": {
+			"paqueteid": "798",
+			"aplicacionid": "1165"	
+		},
+		"natgeo": {
+			"paqueteid": "797",
+			"aplicacionid": "1164"
+		},
+		"foxfit": {
+			"paqueteid": "807",
+			"aplicacionid": "1173"
+		}
+	},
+	"countryInfo": {
+		"2":{
+			"sponsorId": 13,
+			"interval": 7
+		},
+		"4":{
+			"sponsorId": 57,
+			"interval": 7
+		},
+		"5":{
+			"sponsorId": 20,
+			"interval": 7
+		},
+		"6":{
+			"sponsorId": 17,
+			"interval": 7
+		},
+		"8":{
+			"sponsorId": 27,
+			"interval": 7
+		},
+		"9":{
+			"sponsorId": 45,
+			"interval": 7
+		},
+		"10":{
+			"sponsorId": 56,
+			"interval": 7
+		},
+		"13":{
+			"sponsorId": 51,
+			"interval": 7
+		},
+		"30":{
+			"sponsorId": 10,
+			"interval": 7
+		}
+
+	},
+	"debug" : 1,
+	"processMtContent" : {
+		"top" : 1
+	}
 }

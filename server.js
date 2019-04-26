@@ -7,11 +7,28 @@ var winston = require('winston');
 var utils = require('../libs/utils');
 var mssql = require('../libs/mssql');
 var redis = require('../libs/redis');
+var opradb = require('./libs/opradb');
 
 var config = require('./config/config');
-
 var logger;
 
+//esto queda para despues #f5 : definir operador puesto que es una dependencia de opradb, luego de definirlo se debe ejecutar el script actual pasandole como parametro el operador.
+
+// var args = process.argv.slice(2);
+// var operatorName = (typeof args[0] != 'undefined') ? args[0] : false;
+// if (!operatorName){
+//     console.log('Debe especificar operador');
+//     process.exit();
+// }
+
+// if (typeof config.operator[operatorName] == 'undefined'){
+//     console.log('Operador invalido');
+//     process.exit();
+// }else{
+//     var operator = require(__dirname + '/config/' + config.operator[operatorName]);
+// }
+
+//#f5
 if(config.debug){
     logger = new (winston.Logger)({
         transports: [
@@ -49,6 +66,10 @@ mssql.setConfig(config.mssql);
 mssql.setLogger(mssqlLogger);
 mssql.init();
 
+opradb.setOperator(config);
+opradb.setDB(mssql);
+opradb.setLogger(mssqlLogger);
+
 /*var heartbeats = require('../libs/heartbeats');
 heartbeats.setLogger(mssqlLogger);
 heartbeats.setDB(mssql);
@@ -65,6 +86,12 @@ app.locals.logger = logger;
 app.locals.mssql = mssql;
 app.locals.debug = config.debug;
 app.locals.redis = redis;
+app.locals.mw = config.mw;
+app.locals.productMap = config.productMap;
+app.locals.countryInfo = config.countryInfo;
+app.locals.authorization = config.authorization;
+app.locals.opradb = opradb;
+app.locals.getSessionId = utils.getSessionId();
 
 /**
  * Ramiro Portas: #jj

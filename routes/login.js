@@ -1,52 +1,119 @@
 var async = require('async');
 var express = require('express');
 var router = express.Router();
+var request = require('request');
 
-var logger, mssql, debug;
+var logger, mssql, debug, mw, opradb, productMap, countryInfo, getSessionId, authorization;
 
 router.post('/:product_name', function(req, res, next) {	
 	logger = req.app.locals.logger;
 	mssql = req.app.locals.mssql;
 	debug = req.app.locals.debug;
-
+	mw = req.app.locals.mw;
+	opradb = req.app.locals.opradb;
+	productMap = req.app.locals.productMap;
+	countryInfo = req.app.locals.countryInfo;
+	getSessionId = req.app.locals.getSessionId;
+	authorization = req.app.locals.authorization;
+	
 	/**
 	 * Ramiro Portas : #1
 	 * (1) cargo a reqFull, parametros de tipo path y body
 	 */
 	 var reqFull = {}
-	 reqFull.body = req.body
 	 reqFull.path = req.params;
 	 reqFull.headers = req.headers;
+	 reqFull.body = req.body;
 	//#1
 
+	debug
+	? logger.info('Request method ' + '(/v1/subscriber/login)' + ' : ' + JSON.stringify(reqFull))
+	: logger.info('Request method ' + '(/v1/subscriber/login)' + ' : ' + JSON.stringify(reqFull));
+
 	asyncResolveLogin(reqFull, (err, rs) => {
+		//preparo json respuesta ambos casos
 		var response = {};			
-		if (!err){
-			//aca preparar json de respuesta caso exitoso
+		response['result'] = {};
+		response['status'] = {};
+		(() => {
+			if(rs.isActiveRs){
+				response.result['login_status'] = rs.isActiveRs.subscription !== false ? 1 : 0;
+				response.result['subscriber_status'] = rs.isActiveRs.subscription !== false ? 1 : 0; //queda definido en 0 y 1 por Benja
+				response.result['billing_status'] = 
+				rs.isActiveRs.subscription !== false 
+				? ((spid) => {
 
-			response['result'] = {};
-			response.result['login_status'] = 0;
-			response.result['subscriber_status'] = 0;
-			response.result['billing_status'] = 0;
-			response.result['msisdn'] = "string";
-			response.result['carrier_id'] = 0;
-			response.result['server_response_id'] = "string";
+					//uso SponsorId para utilizar en la configuracion de mapeo 'countryInfo' para obtener interval, 
+					//con interval puedo obtener el billing_stat
+					//billing_status = (ultimo_cobro diff now() < interval) ? 1 : 0;
 
-			response['status'] = {};
+					var interval = ((x) => {
+						for (var carrierId in countryInfo){
+							if (countryInfo[carrierId].sponsorId == x){
+								return countryInfo[carrierId].interval;
+							}
+						}
+						return '0';					
+					})(spid);
+					var dayInt = 1000 * 60 * 60 * 24;
+					var dateNow = new Date();
+					var dateLastBilling = new Date(rs.isActiveRs.subscription.ultimocobro);
+					var diffDays = parseInt( (dateLastBilling - dateNow) / dayInt);
+					var billing_status = diffDays < interval ? '1' : '0';
+					// logger.debug('dateNow :' + dateNow);
+					// logger.debug('dateLastBilling :' + dateLastBilling);
+					// logger.debug('diffDays :' + diffDays);
+					// logger.debug('interval :' + interval);
+					return billing_status; 
+
+				})(rs.isActiveRs.subscription.SponsorId) 
+				: '0';
+
+				response.result['msisdn'] = rs.isActiveRs.msisdn ? rs.isActiveRs.msisdn : '0' ;
+
+				response.result['carrier_id'] = 
+
+				//uso SponsorId para utilizar en la configuracion de mapeo 'countryInfo' para obtener carrierId
+				rs.isActiveRs.subscription !== false 
+				? ((spid) => { 
+					for (var carrierId in countryInfo){
+						if (countryInfo[carrierId].sponsorId == spid){
+							return carrierId;
+						}
+					}
+					return false;
+				})(rs.isActiveRs.subscription.SponsorId) 
+				: '0' ; 
+
+				response.result['server_response_id'] = getSessionId; //esto sale de utils.getSessionId()
+			}
+		})();
+
+		!err
+		? (() => {
+			//aca preparar json de respuesta caso rs
 			response.status['code'] = 1;
-			response.status['description'] = "string";
+			response.status['description'] = "La operacion se pudo realizar/consulta";
+
+			//guardo response en log
+			debug
+			? logger.info('Response method ' + '(/v1/subscriber/login)' + ' : ' + JSON.stringify(response))
+			: logger.info('Response method ' + '(/v1/subscriber/login)' + ' : ' + JSON.stringify(response));	
 
 			res.status(200).send(response);
-		}else{
-			//aca preparar json de respuesta con error
-			
-			response['result'] = {};
+		})()
+		: (() => {
+			//aca preparar json de respuesta caso err
 
-			response['status'] = {};
-			response.status['code'] = 99;
-			response.status['description'] = "Invalid authorization header";
+			response.status['code'] = rs.code;
+			response.status['description'] = rs.error;
+			
+			debug
+			? logger.info('Response method ' + '(/v1/subscriber/login)' + ' : ' + JSON.stringify(response))
+			: logger.info('Response method ' + '(/v1/subscriber/login)' + ' : ' + JSON.stringify(response));
+
 			res.status(400).send(response);
-		}
+		})();
 	});
 });
 
@@ -61,44 +128,153 @@ router.post('/:product_name', function(req, res, next) {
 	//vector de funciones
 	var ini = [
 	(cb) => {
+		//step 1 valido headers authorization
+		(function ini(step, code, cantError){
+			data.step = step || 1;
+			data.code = code || 99;
+			data.cantError = cantError || 0;
+		})(null, null, 2);
+
 		debug
-		? logger.debug('asyncResolveLogin(): Execute process... 1') 
+		? logger.debug('step' + data.step + ' : valido header')
 		: null;
 
-		//valido si los parametros llegaron ok
-		data.body && data.path.product_name && data.headers.authorization
-		? cb(null, data)
-		: cb(data, null);
+		//valido que este headers.authorization
+		data.headers.authorization
+		? (() => {
+			var ha = {};
+			ha.value = data.headers.authorization.split(" ");
+			ha.type = ha.value[0];
+			ha.token = ha.value[1];
+			ha.decodeToken = new Buffer(ha.token, 'base64').toString('ascii').split(":");
+			ha.user = ha.decodeToken[0];
+			ha.pass = ha.decodeToken[1];
+
+			//valido que headers.authorization sea 'Basic' && decodifico el token y valido usuario y contraseña
+			ha.type === authorization.type
+			&& ha.user == authorization.user
+			&& ha.pass == authorization.password
+			? cb(false, data)
+			: (() => {
+				(function error(error){
+					data.code --;
+					mensajeDefaut = 'Error en step(' + data.step + '), code: ' + data.code;
+					data.error = error || mensajeDefaut;
+				})("Error authorization : alguno de estos datos es incorrecto (type, user, pass)");
+
+				cb(true, data);
+			})();
+
+		})()
+		: (() => {
+			(function error(error){
+				data.code --;
+				mensajeDefaut = 'Error en step(' + data.step + '), code: ' + data.code;
+				data.error = error || mensajeDefaut;
+			})("Error authorization : No existe el headers.authorization");
+
+			cb(true, data);
+		})()
 	},
-	// (data, cb) => {
-	// 	debug
-	// 	? logger.debug('asyncResolveLogin(): Execute process... 2') 
-	// 	: null;
+	(data, cb) => {
+		//step 2 valido parametros
+		(function update(cantError){
+			data.step ++;
+			data.code -= data.cantError;
+			data.cantError = cantError || 0;
+		})(2);
 
-	// 	cb(null, data);
-	// },
-	// (data, cb) => {
-	// 	debug
-	// 	? logger.debug('asyncResolveLogin(): Execute process... 3') 
-	// 	: null;
+		debug
+		? logger.debug('step' + data.step + ' : valido parametros, armo parametros para query opradb.isActive() en step3')
+		: null;
 
-	// 	cb(null, data);
-	// },
+
+		//valido si los parametros llegaron ok (path, body)
+		data.body && data.path.product_name
+		? (() => {
+			//valido si es posible mapear por product_name
+			productMap[data.path.product_name] 
+			? (() => {
+				//preparo parametros para la query 'opradb.isActive'
+				data.paramsIsActive = new Object();
+
+				data.paramsIsActive.paqueteid = productMap[data.path.product_name].paqueteid;
+				data.paramsIsActive.msisdn = data.body.msisdn ? data.body.msisdn : '';
+				data.paramsIsActive.suscripcionid = data.body.user_id ? data.body.user_id : '';
+
+				
+				//envio los datos a step 2
+				cb(false, data);
+			})()
+			//no se pudo mapear por product_name, envio los datos a funcion final con error
+			: (() => {
+				(function error(error){
+					data.code --;
+					mensajeDefaut = 'Error en step(' + data.step + '), code: ' + data.code;
+					data.error = error || mensajeDefaut;
+				})("Error de mapeo : No es posible mapear (productMap)");
+
+				cb(true, data);
+			})()
+		})()
+		: (() => {
+			//no llegaron los parametros, envio los datos a funcion final con error
+			(function error(error){
+				data.code --;
+				mensajeDefaut = 'Error en step(' + data.step + '), code: ' + data.code;
+				data.error = error || mensajeDefaut;
+			})("Error parametros : No llegaron los parametros (data.body, data.path.product_name)");
+
+			cb(true, data);
+		})();
+	},
+	(data, cb) => {
+		//step 3 ejecuto query 'opradb.isActive'
+		(function update(cantError){
+			data.step ++;
+			data.code -= data.cantError;
+			data.cantError = cantError || 0;
+		})(1);
+
+		debug
+		? logger.debug('step' + data.step + ' : Ejecuto query opradb.isActive()')
+		: null;
+
+		//ejecuto la query 'opradb.isActive'
+		opradb.isActive(data.paramsIsActive, (err, rs) => {
+			// logger.debug("rsIsActive : " + JSON.stringify(rs));
+			data.isActiveRs = rs;
+			rs.subscription !== false
+			? cb(false, data)
+			: (() => {
+				//no llegaron los parametros, envio los datos a funcion final con error
+				(function error(error){
+					data.code --;
+					mensajeDefaut = 'Error en step(' + data.step + '), code: ' + data.code;
+					data.error = error || mensajeDefaut;
+				})("Error db : opradb.isActive, no encontro una subscription con los parametros enviados");
+
+
+				cb(true, data);
+			})();
+
+
+		});
+	}
 	];
 
 	//funcion final
-	var final = (err, rs) => {
-		debug
-		? logger.debug('asyncResolveLogin(): Execute final... ')
+	var final = (err, data) => {
+		debug 
+		? logger.debug('Final')
 		: null;
 
 		err
 		? (() => {
-			logger.debug('asyncResolveLogin(): Error final... ');
-			console.log(err);
-			cb(err, rs);
+			logger.debug('Error final step(' + data.step + '): ' + data.error);
+			cb(true, data);
 		})()
-		: cb(err, rs);
+		: cb(false, data);
 	};
 
 	//registro vector funciones, funcion final
