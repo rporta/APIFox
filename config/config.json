@@ -32,9 +32,6 @@
 		"port": 8099,
 		"whitelist": ["::ffff:127.0.0.1", ["::ffff:192.168.1.1","::ffff:192.168.1.253"], ["::ffff:192.168.2.1","::ffff:192.168.2.253"], ["::ffff:192.168.0.1","::ffff:192.168.0.253"], ["::ffff:190.92.13.1","::ffff:190.92.13.253"], "::ffff:52.7.233.104", "::ffff:18.228.218.93",  "::ffff:13.52.149.229", "::ffff:184.169.164.16", "::ffff:18.231.174.174", "::ffff:190.210.254.89", "::ffff:18.231.174.174"]
 	},
-
-
-
 	"db": {
 		"heartBeat": "sp_heartbeats",
 		"setMO": "sp_insert_entrada",
@@ -71,38 +68,56 @@
 	},
 	"countryInfo": {
 		"2":{
+			"tz": "America/Santiago",
+			"country": "Chile",
 			"sponsorId": 13,
 			"interval": 7
 		},
 		"4":{
+			"tz": "America/Santiago",
+			"country": "Chile",
 			"sponsorId": 57,
 			"interval": 7
 		},
 		"5":{
+			"tz": "America/Montevideo",
+			"country": "Uruguay",
 			"sponsorId": 20,
 			"interval": 7
 		},
 		"6":{
+			"tz": "America/Montevideo",
+			"country": "Uruguay",
 			"sponsorId": 17,
 			"interval": 7
 		},
 		"8":{
+			"tz": "America/Asuncion",
+			"country": "Paraguay",
 			"sponsorId": 27,
 			"interval": 7
 		},
 		"9":{
+			"tz": "America/Asuncion",
+			"country": "Paraguay",
 			"sponsorId": 45,
 			"interval": 7
 		},
 		"10":{
+			"tz": "America/La_Paz",
+			"country": "Bolivia",
 			"sponsorId": 56,
 			"interval": 7
 		},
 		"13":{
+			"tz": "America/Lima",
+			"country": "Peru",
 			"sponsorId": 51,
 			"interval": 7
 		},
 		"30":{
+			"tz": "America/Costa_Rica",
+			"country": "Costa Rica",
 			"sponsorId": 10,
 			"interval": 7
 		}

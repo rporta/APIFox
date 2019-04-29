@@ -6,6 +6,7 @@ var winston = require('winston');
 var utils = require('../libs/utils');
 var mssql = require('../libs/mssql');
 var request = require('request');
+var moment = require('./libs/moment-timezone');
 var debug = config.debug;
 var productMap = config.productMap;
 var countryInfo = config.countryInfo;
@@ -227,6 +228,7 @@ opradb.setLogger(mssqlLogger);
 			}
 			else if(currentRequest.body.carrier_id.constructor.name === 'Number'){
 				//(bulk-mt) : ejecuto la query 'opradb.billingStatus', preaparo params para la query 'opradb.isActive'
+				var tz = countryInfo[currentRequest.body.carrier_id].tz;
 				var paramsBillingStatus = {};
 				paramsBillingStatus.sponsorid = countryInfo[currentRequest.body.carrier_id].sponsorId;
 				paramsBillingStatus.paqueteid = productMap[currentRequest.path.product_name].paqueteid; 
@@ -244,6 +246,8 @@ opradb.setLogger(mssqlLogger);
 							newRs.paqueteid = rs.paqueteid;
 							newRs.suscripcionid = rs.subscription[jj].SuscripcionId;
 							newRs.text = currentRequest.body.message;
+							// newRs.schedule_date = currentRequest.body.schedule_date;
+							newRs.moment_date = moment(currentRequest.body.schedule_date).tz(tz);
 							newRs.subscription = rs.subscription[jj];
 
 							//preparo para step 5 (Recorro vector rsIsActive, preparo parametros para MT)
@@ -333,7 +337,7 @@ opradb.setLogger(mssqlLogger);
 			data.paramInsertMT = new Array();
 			for(var l in data.rsIsActive){
 				var currentRsIsActive = data.rsIsActive[l];
-				logger.debug('rsIsActive : ' + JSON.stringify(currentRsIsActive) + '\n');
+				// logger.debug('rsIsActive : ' + JSON.stringify(currentRsIsActive) + '\n');
 				var paramMT = {};
 				//paramMT.entradaid = null;
 				paramMT.shortcode = currentRsIsActive.subscription.Destino;
@@ -348,6 +352,7 @@ opradb.setLogger(mssqlLogger);
 				// paramMT.prioridad = 5;
 				paramMT.sponsorid = currentRsIsActive.subscription.SponsorId;
 				// paramMT.rebotado = 0;
+				paramMT.FechaProceso = currentRsIsActive.moment_date || null;
 
 				data.paramInsertMT.push(paramMT);
 				logger.debug('paramMT : ' + JSON.stringify(paramMT) + '\n');
@@ -439,6 +444,6 @@ opradb.setLogger(mssqlLogger);
  				logger.debug('callback err');
  			}
  		});
- 	}, config.interval);
+ 	}, processMtContent.interval);
  })(null);
 //#ff 

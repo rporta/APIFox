@@ -81,7 +81,8 @@ var opradb = {
 			Relacion: data.mds || 0,
 			Prioridad: data.prioridad || 5,
 			SponsorId: data.sponsorid,
-			Rebotado: data.rebotado || 0
+			Rebotado: data.rebotado || 0,
+			FechaProceso: data.fechaproceso || null
 		}
 		this.logger.debug('Inserting MT: ' + JSON.stringify(params));
 		var self = this;
