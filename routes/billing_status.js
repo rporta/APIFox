@@ -139,11 +139,16 @@ router.get('/:product_name/:carrier_id/:page_size/:page_number', function(req, r
 			//valido si es posible mapear por product_name
 			productMap[data.path.product_name] && countryInfo[data.path.carrier_id]
 			? (() => {
-				data.paramsBillingStatus = {};
-				data.paramsBillingStatus.sponsorid = countryInfo[data.path.carrier_id].sponsorId;
-				data.paramsBillingStatus.paqueteid = productMap[data.path.product_name].paqueteid; 
-				data.paramsBillingStatus.interval = countryInfo[data.path.carrier_id].interval;
-				data.paramsBillingStatus.top = data.path.page_size;
+				data.paramsBillingStatus = new Array();
+				for(var i in productMap[data.path.product_name].paqueteid){
+					var pr = new Object();
+					pr.sponsorid = countryInfo[data.path.carrier_id].sponsorId;
+					pr.paqueteid = productMap[data.path.product_name].paqueteid[i]; 
+					pr.interval = countryInfo[data.path.carrier_id].interval;
+					pr.top = data.path.page_size;
+					data.paramsBillingStatus.push(pr);
+				}
+				//envio los datos a step 3
 				cb(false, data);
 			})()
 			: (() => {
@@ -180,29 +185,33 @@ router.get('/:product_name/:carrier_id/:page_size/:page_number', function(req, r
 		? logger.debug('step' + data.step + ' : Ejecuto query opradb.billingStatus()')
 		: null;
 
-		//ejecuto la query 'opradb.billingStatus'
-		opradb.billingStatus(data.paramsBillingStatus, (err, rs) => {
-			data.billingStatusRs = rs;
-			data.billingStatusRs.subscription !== false
-			? (() => {				debug
-				? logger.debug('step' + data.step + ' : Rs query opradb.billingStatus() :  \n\n' + JSON.stringify(data.billingStatusRs) + '\n\n')
-				: null;
+		async.eachSeries(data.paramsBillingStatus, function(currentParam, next){
+			//ejecuto la query 'opradb.billingStatus'
+			opradb.billingStatus(currentParam, (err, rs) => {
+				data.billingStatusRs = rs;
+				data.billingStatusRs.subscription !== false
+				? (() => {				debug
+					? logger.debug('step' + data.step + ' : Rs query opradb.billingStatus() :  \n\n' + JSON.stringify(data.billingStatusRs) + '\n\n')
+					: null;
 
-				cb(false, data);
-			})()
-			: (() => {
-				//no llegaron los parametros, envio los datos a funcion final con error
-				(function error(error){
-					data.code --;
-					mensajeDefaut = 'Error en step(' + data.step + '), code: ' + data.code;
-					data.error = error || mensajeDefaut;
-				})("Error db : problema al ejecutar opradb.billingStatus, no encontro una subscription con los parametros enviados");
-
+					cb(false, data);
+				})()
+				: (() => {
+					//no llegaron los parametros, envio los datos a funcion final con error
+					(function error(error){
+						data.code --;
+						mensajeDefaut = 'Error en step(' + data.step + '), code: ' + data.code;
+						data.error = error || mensajeDefaut;
+					})("Error db : problema al ejecutar opradb.billingStatus, no encontro una subscription con los parametros enviados");
+					return next();
+				})();
+			});
+		}, function (){
+			if(data.error == "Error db : opradb.isActive, no encontro una subscription con los parametros enviados"){
 				cb(true, data);
-			})();
-
-
+			}			
 		});
+
 	}
 	];
 

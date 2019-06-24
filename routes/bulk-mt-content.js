@@ -9,7 +9,7 @@ router.post('/:product_name', function(req, res, next) {
 	mssql = req.app.locals.mssql;
 	debug = req.app.locals.debug;
 	redis = req.app.locals.redis;
-	getSessionId = req.app.locals.getSessionId;
+	getSessionId = req.app.locals.utils.getSessionId();
 	authorization = req.app.locals.authorization;
 	
 	/**

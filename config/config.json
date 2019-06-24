@@ -1,17 +1,17 @@
 {
 	"mw": {
-		"protocolo" : "http://",
-		"host" : "api.hera.opratel.com",
-		"port" : "80",
-		"path" : "unsubscribe",
-		"method" : "POST",
-		"apiKey" : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXUyJ9.eyJzdWIiOiIxIiwiYXVkIjoiT3ByYXRlbCIsInllYXIiOiIyMDE1IiwiZXhwIjoiMjUzNDAyMjY0NjI4IiwiaXNzIjoiaHR0cDpcL1wvZGV2MS5hcGkub3ByYXRlbC5jb21cL3Rva2VuIiwiaWF0IjoiMTQzMTY5ODIyOSIsIm5iZiI6IjE0MzE2OTgyMjkiLCJqdGkiOiJmYjlkNDkxNDBjOTMwOGVkNDdhMTYwMzQwZmVlMTIxYyJ9.Yzk3NTQyODQxNTRiOTgzODA0NjE2Yjk3YTI5YTY3ZWJlZDlmODE0ZDZhNjU1YzZmODgyNjFjOGMxOWY3MDYyYQ"
+		"protocolo": "http://",
+		"host": "api.hera.opratel.com",
+		"port": "80",
+		"path": "unsubscribe",
+		"method": "POST",
+		"apiKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXUyJ9.eyJzdWIiOiIxIiwiYXVkIjoiT3ByYXRlbCIsInllYXIiOiIyMDE1IiwiZXhwIjoiMjUzNDAyMjY0NjI4IiwiaXNzIjoiaHR0cDpcL1wvZGV2MS5hcGkub3ByYXRlbC5jb21cL3Rva2VuIiwiaWF0IjoiMTQzMTY5ODIyOSIsIm5iZiI6IjE0MzE2OTgyMjkiLCJqdGkiOiJmYjlkNDkxNDBjOTMwOGVkNDdhMTYwMzQwZmVlMTIxYyJ9.Yzk3NTQyODQxNTRiOTgzODA0NjE2Yjk3YTI5YTY3ZWJlZDlmODE0ZDZhNjU1YzZmODgyNjFjOGMxOWY3MDYyYQ"
 	},
-	"authorization" : {
-		"type" : "Basic",
-		"user" : "ufafa",
-		"password" : "pfafa",
-		"apiKey" : "dWZhZmE6cGZhZmE="
+	"authorization": {
+		"type": "Basic",
+		"user": "ufafa",
+		"password": "pfafa",
+		"apiKey": "dWZhZmE6cGZhZmE="
 	},
 	"mssql": {
 		"server": "zeus",
@@ -29,93 +29,116 @@
 		"expire": 720
 	},
 	"server": {
+
+		"api": {
+			"serviceName": "APIFOX - Server"
+		},
+		"mtProcess": {
+			"serviceName": "APIFOX - MT Processor"
+		},
 		"port": 8099,
-		"whitelist": ["::ffff:127.0.0.1", ["::ffff:192.168.1.1","::ffff:192.168.1.253"], ["::ffff:192.168.2.1","::ffff:192.168.2.253"], ["::ffff:192.168.0.1","::ffff:192.168.0.253"], ["::ffff:190.92.13.1","::ffff:190.92.13.253"], "::ffff:52.7.233.104", "::ffff:18.228.218.93",  "::ffff:13.52.149.229", "::ffff:184.169.164.16", "::ffff:18.231.174.174", "::ffff:190.210.254.89", "::ffff:18.231.174.174"]
+		"whitelist": ["::ffff:127.0.0.1", ["::ffff:192.168.1.1", "::ffff:192.168.1.253"],
+			["::ffff:192.168.2.1", "::ffff:192.168.2.253"],
+			["::ffff:192.168.0.1", "::ffff:192.168.0.253"],
+			["::ffff:190.92.13.1", "::ffff:190.92.13.253"], "::ffff:52.7.233.104", "::ffff:18.228.218.93", "::ffff:13.52.149.229", "::ffff:184.169.164.16", "::ffff:18.231.174.174", "::ffff:190.210.254.89", "::ffff:18.231.174.174"
+		]
 	},
 	"db": {
 		"heartBeat": "sp_heartbeats",
 		"setMO": "sp_insert_entrada",
 		"setMT": "sp_insert_salida",
 		"isActive": "opratelinfo.dbo.sp_APIFOX_select_suscripcionactiva_paquete",
-		"billingStatus": "opratelinfo.dbo.sp_APIFOX_select_usuariosconcobros"
+		"billingStatus": "opratelinfo.dbo.sp_APIFOX_select_usuariosconcobros",
+		"getActiveUsers": "opratelinfo.dbo.sp_APIFOX_select_usuariosactivos"
 	},
-	"route": [
-		{ "recurso" : "login", "url" : "/v1/subscriber/login" },
-		{ "recurso" : "unsubscribe", "url" : "/v1/subscriber/unsubscribe" },
-		{ "recurso" : "pin-recover", "url" : "/v1/subscriber/pin-recover" },
-		{ "recurso" : "mt-content", "url" : "/v1/subscriber/mt-content" },
-		{ "recurso" : "bulk-mt-content", "url" : "/v1/subscriber/bulk-mt-content" },
-		{ "recurso" : "billing_status", "url" : "/v1/subscriber/billing_status" }
-	],
+	"route": [{
+		"recurso": "login",
+		"url": "/v1/subscriber/login"
+	}, {
+		"recurso": "unsubscribe",
+		"url": "/v1/subscriber/unsubscribe"
+	}, {
+		"recurso": "pin-recover",
+		"url": "/v1/subscriber/pin-recover"
+	}, {
+		"recurso": "mt-content",
+		"url": "/v1/subscriber/mt-content"
+	}, {
+		"recurso": "bulk-mt-content",
+		"url": "/v1/subscriber/bulk-mt-content"
+	}, {
+		"recurso": "billing_status",
+		"url": "/v1/subscriber/billing_status"
+	}],
 	"productMap": {
 		"fsg": {
-			"paqueteid_new": "796",
-			"paqueteid": "811",
-			"aplicacionid": "1163"
+			"paqueteid_new": ["796"],
+			"paqueteid": ["801", "811", "796"],
+			"aplicacionid": ["1163", "1163", "1163"]
 		},
 		"foxfans": {
-			"paqueteid": "798",
-			"aplicacionid": "1165"	
+			"paqueteid": ["798", "802"],
+			"aplicacionid": ["1165", "1164"]
 		},
 		"natgeo": {
-			"paqueteid": "797",
-			"aplicacionid": "1164"
+			"paqueteid": ["797"],
+			"aplicacionid": ["1164"]
 		},
 		"foxfit": {
-			"paqueteid": "807",
-			"aplicacionid": "1173"
+			"paqueteid": ["807", "816", "817"],
+			"aplicacionid": ["1173", "1182", "1183"]
 		}
 	},
 	"countryInfo": {
-		"2":{
+		"2": {
 			"tz": "America/Santiago",
 			"country": "Chile",
 			"sponsorId": 13,
 			"interval": 7
 		},
-		"4":{
+		"4": {
 			"tz": "America/Santiago",
 			"country": "Chile",
 			"sponsorId": 57,
 			"interval": 7
 		},
-		"5":{
+		"5": {
 			"tz": "America/Montevideo",
 			"country": "Uruguay",
 			"sponsorId": 20,
 			"interval": 7
 		},
-		"6":{
+		"6": {
 			"tz": "America/Montevideo",
 			"country": "Uruguay",
 			"sponsorId": 17,
 			"interval": 7
 		},
-		"8":{
+		"8": {
 			"tz": "America/Asuncion",
 			"country": "Paraguay",
 			"sponsorId": 27,
 			"interval": 7
 		},
-		"9":{
+		"9": {
 			"tz": "America/Asuncion",
 			"country": "Paraguay",
 			"sponsorId": 45,
 			"interval": 7
 		},
-		"10":{
+		"10": {
 			"tz": "America/La_Paz",
 			"country": "Bolivia",
 			"sponsorId": 56,
 			"interval": 7
 		},
-		"13":{
+		"13": {
 			"tz": "America/Lima",
 			"country": "Peru",
 			"sponsorId": 51,
 			"interval": 7
 		},
-		"30":{
+		"30": {
 			"tz": "America/Costa_Rica",
 			"country": "Costa Rica",
 			"sponsorId": 10,
@@ -123,9 +146,9 @@
 		}
 
 	},
-	"debug" : 1,
-	"processMtContent" : {
-		"top" : 1,
-		"interval" : 5000
+	"debug": 1,
+	"processMtContent": {
+		"top": 10000,
+		"interval": 5000
 	}
 }

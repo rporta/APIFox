@@ -119,7 +119,7 @@ var asyncResolveProcessMtContent = (data, cb) => {
 
 			//consulto en redis
 			try {
-				redis.keys('apifox-*', (err, rs) => {
+				redis.keys('apifox-bulk-mt-content-000003', (err, rs) => {
 					!err
 						?
 						(() => {
@@ -282,9 +282,10 @@ var asyncResolveProcessMtContent = (data, cb) => {
 
 
 						async.eachSeries(paramsBillingStatus, function(currentParamBillingStatus, next2) {
-								// logger.debug('postRequest: ' + JSON.stringify(paramsBillingStatus));
+								logger.debug('postRequest: ' + JSON.stringify(paramsBillingStatus));
 								opradb.getActiveUsers(currentParamBillingStatus, (err, rs) => {
-
+                                    console.log('getActiveUsers');
+                                    console.log(rs);
 									rs.subscription !== false ?
 										(() => {
 											// logger.debug('billingStatusRs RS  :  \n\n' + JSON.stringify(rs) + '\n\n')
@@ -301,7 +302,7 @@ var asyncResolveProcessMtContent = (data, cb) => {
 												//preparo para step 5 (Recorro vector rsIsActive, preparo parametros para MT)
 												data.rsIsActive.push(newRs);
 											}
-											return next();
+											return next2();
 										})() :
 										(() => {
 											//no llegaron los parametros, envio los datos a funcion final con error
@@ -400,7 +401,7 @@ var asyncResolveProcessMtContent = (data, cb) => {
 					paramMT.medioid = currentRsIsActive.subscription.MedioId;
 					paramMT.contenido = currentRsIsActive.text;
 					paramMT.nocharge = 1;
-					paramMT.estadoesid = 1;
+					paramMT.estadoesid = 34;
 					paramMT.suscripcionid = currentRsIsActive.subscription.SuscripcionId;
 					// paramMT.mds = 0;
 					paramMT.prioridad = 5;

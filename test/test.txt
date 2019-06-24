@@ -10,126 +10,95 @@ method : login
 header : Authorization
 method : POST
 path : /v1/subscriber/login/{product_name}
-
-	DATOS DE EJEMPLO
-
-parametros de path : 
--product_name : fsg
+parametros de path : product_name
 body : 
 
 {
-  "msisdn": "56948893246",
-  "pin": "string",
-  "user_id": 76908659,
-  "country_code": "2",
-  "client_request_id": "string"
+"msisdn": "56936780685",
+"pin": "string",
+"user_id": 0,
+"country_code": "2",
+"client_request_id": "string"
 }
 -------------------------------
 method : unsubscribe 
 header : Authorization
 method : POST
 path : /v1/subscriber/unsubscribe/{product_name}
-
-	DATOS DE EJEMPLO
-
-parametros de path : 
--product_name : fsg
+parametros de path : product_name
 body : 
 
 {
-  "client_request_id": "string",
-  "user_id": 0,
-  "carrier_id": 2
+"client_request_id": "string",
+"user_id": 0,
+"carrier_id": 2
 }
 -------------------------------
 method : pin-recover 
 header : Authorization
 method : POST
 path : /v1/subscriber/pin-recover/{product_name}
-
-	DATOS DE EJEMPLO
-
-parametros de path : 
--product_name : fsg
+parametros de path : product_name
 body : 
 
 {
-  "client_request_id": "string",
-  "msisdn": "string",
-  "country_code": "string"
+"client_request_id": "string",
+"msisdn": "string",
+"country_code": "string"
 }
 -------------------------------
 method : mt-content 
 header : Authorization
 method : POST
 path : /v1/subscriber/mt-content/{product_name}
-
-	DATOS DE EJEMPLO
-
-parametros de path : 
--product_name : fsg
-body opcion 1 : 
+parametros de path : product_name
+body opcion 1: 
 
 {
-  "content_id": "4",
-  "data_option_1": {
-    "text": "test data_option_1, text (1,1)<->user_ids (n,1)",
-    "user_ids": [
-      76908659,
-      76908659
-    ]
-  },
-  "feed_id": 0,
-  "feed_content_guid": "string"
+"content_id": "1",
+"data_option_1": {
+"text": "string",
+"user_ids": [
+0
+]
+},
+"feed_id": 0,
+"feed_content_guid": "string"
 }
 
 body opcion 2: 
 
 {
-  "content_id": "2",
-  "data_option_2": [
-    {
-      "user_id": 76908659,
-      "text": "data_option_2, lista de mt(mensaje, user_ids),reg 1"
-    },
-    {
-      "user_id": 76908659,
-      "text": "data_option_2, lista de mt(mensaje, user_ids),reg 2"
-    }
-  ],
-  "feed_id": 0,
-  "feed_content_guid": "string"
+"content_id": "2",
+"data_option_2": [
+{
+"user_id": 0,
+"text": "fafa"
+}
+],
+"feed_id": 0,
+"feed_content_guid": "string"
 }
 -------------------------------
 method : bulk-mt-content 
 header : Authorization
 method : POST
 path : /v1/subscriber/bulk-mt-content/{product_name}
-
-	DATOS DE EJEMPLO
-
-parametros de path : 
--product_name : fsg
+parametros de path : product_name
 body : 
 {
-  "content_id": "asd",
-  "carrier_id": 4,
-  "message": "fafa",
-  "schedule_date": "2019-04-15T19:15:43.806Z",
-  "feed_id": 0,
-  "feed_content_guid": "string"
+"content_id": "asd",
+"carrier_id": 0,
+"message": "fafa",
+"schedule_date": "2019-04-15T19:15:43.806Z",
+"feed_id": 0,
+"feed_content_guid": "string"
 }
 -------------------------------
 method : billing_status 
 header : Authorization
 method : GET
 path : /v1/subscriber/billing_status/{product_name}/{carrier_id}/{page_size}/{page_number}
-
-	DATOS DE EJEMPLO
-
-parametros de path : 
--product_name : fsg
--carrier_id : 4
--page_size : 10
+parametros de path : product_name, carrier_id, page_size
 body : 
 -------------------------------

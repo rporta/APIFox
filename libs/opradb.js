@@ -67,6 +67,31 @@ var opradb = {
 			}
 		})
 	},
+	getActiveUsers: function(data, callback){
+		var params = {
+			SponsorId: data.sponsorid,
+			PaqueteId: data.paqueteid
+		}
+
+		var self = this;
+		this.db.execute(this.operator.db.getActiveUsers, params, function(rs) {
+		if (rs && rs.length > 0 && typeof rs[0] != 'undefined'){
+				if (typeof rs[0] != 'undefined'){
+					self.logger.info('Subscription found, Array: ' + JSON.stringify(rs[0]));
+					data.subscription = rs[0];
+					callback(null, data);
+				}else{
+					self.logger.error('Subscription not found: ' + JSON.stringify(params));
+					data.suscripcion = false;
+					callback(null, data);
+				}
+			}else{
+				self.logger.error('Subscription not found: ' + JSON.stringify(params));
+				data.suscripcion = false;
+				callback(null, data);
+			}
+		})
+	},
 	insertMT: function(data, callback){
 		var params = {
 			EntradaId: data.entradaid,
