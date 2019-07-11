@@ -295,7 +295,7 @@ var asyncResolveProcessMtContent = (data, cb) => {
 												newRs.suscripcionid = rs.subscription[jj].SuscripcionId;
 												newRs.text = currentRequest.body.message;
 												// newRs.schedule_date = currentRequest.body.schedule_date;
-												newRs.moment_date = moment(currentRequest.body.schedule_date).tz(tz);
+												newRs.moment_date = moment(currentRequest.body.schedule_date).tz(tz).format('YYYY-MM-DD HH:mm');
 												newRs.subscription = rs.subscription[jj];
 
 												//preparo para step 5 (Recorro vector rsIsActive, preparo parametros para MT)
@@ -392,27 +392,25 @@ var asyncResolveProcessMtContent = (data, cb) => {
 				for (var l in data.rsIsActive) {
 					var currentRsIsActive = data.rsIsActive[l];
 					// logger.debug('rsIsActive : ' + JSON.stringify(currentRsIsActive) + '\n');
+
 					var paramMT = {};
-					//paramMT.entradaid = null;
-					paramMT.shortcode = currentRsIsActive.subscription.Destino;
-					paramMT.msisdn = currentRsIsActive.subscription.Origen;
+					paramMT.from = currentRsIsActive.subscription.Destino;
+					paramMT.to = currentRsIsActive.subscription.Origen;
 					paramMT.aplicacionid = currentRsIsActive.subscription.AplicacionId;
 					paramMT.medioid = currentRsIsActive.subscription.MedioId;
 					paramMT.contenido = currentRsIsActive.text;
 					paramMT.nocharge = 1;
-					paramMT.estadoesid = 1;
 					paramMT.suscripcionid = currentRsIsActive.subscription.SuscripcionId;
-					// paramMT.mds = 0;
 					paramMT.prioridad = 5;
 					paramMT.sponsorid = currentRsIsActive.subscription.SponsorId;
-					// paramMT.rebotado = 0;
-					paramMT.FechaProceso = currentRsIsActive.moment_date || null;
+					paramMT.FechaProceso = currentRsIsActive.moment_date || moment().format('YYYY-MM-DD HH:mm');
 
 					data.paramInsertMT.push(paramMT);
 					logger.debug('paramMT : ' + JSON.stringify(paramMT) + '\n');
 
 					(data.rsIsActive.length - 1 == l) ?
 					cb(false, data): null;
+
 				}
 			}
 		},
@@ -431,7 +429,7 @@ var asyncResolveProcessMtContent = (data, cb) => {
 
 			async.eachSeries(data.paramInsertMT, function(currentParamInsertMT, next) {
 					// logger.debug('currentParamInsertMT : ' + JSON.stringify(currentParamInsertMT) + '\n');
-					opradb.insertMT(currentParamInsertMT, (err, rs) => {
+					opradb.insertPreMT(currentParamInsertMT, (err, rs) => {
 						!err
 							?
 							(() => {
@@ -444,7 +442,7 @@ var asyncResolveProcessMtContent = (data, cb) => {
 									data.code--;
 									mensajeDefaut = 'Error en step(' + data.step + '), code: ' + data.code;
 									data.error = error || mensajeDefaut;
-								})("Error db : problema al ejecutar opradb.insertMT");
+								})("Error db : problema al ejecutar opradb.insertPreMT");
 								cb(true, data);
 							})();
 					});

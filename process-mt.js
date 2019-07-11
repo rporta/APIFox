@@ -284,8 +284,8 @@ var asyncResolveProcessMtContent = (data, cb) => {
 						async.eachSeries(paramsBillingStatus, function(currentParamBillingStatus, next2) {
 								logger.debug('postRequest: ' + JSON.stringify(paramsBillingStatus));
 								opradb.getActiveUsers(currentParamBillingStatus, (err, rs) => {
-                                    console.log('getActiveUsers');
-                                    console.log(rs);
+									console.log('getActiveUsers');
+									console.log(rs);
 									rs.subscription !== false ?
 										(() => {
 											// logger.debug('billingStatusRs RS  :  \n\n' + JSON.stringify(rs) + '\n\n')
@@ -401,7 +401,6 @@ var asyncResolveProcessMtContent = (data, cb) => {
 					paramMT.medioid = currentRsIsActive.subscription.MedioId;
 					paramMT.contenido = currentRsIsActive.text;
 					paramMT.nocharge = 1;
-					paramMT.estadoesid = 34;
 					paramMT.suscripcionid = currentRsIsActive.subscription.SuscripcionId;
 					// paramMT.mds = 0;
 					paramMT.prioridad = 5;

@@ -1,8 +1,7 @@
 #!/bin/bash
-#die()
 case "$1" in
 	stop|restart)
-		forever $1 server.js apifox
+		forever $1 server.js
 		forever $1 process-mt-content.js
 		;;
 	*)

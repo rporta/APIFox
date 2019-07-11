@@ -29,7 +29,6 @@
 		"expire": 720
 	},
 	"server": {
-
 		"api": {
 			"serviceName": "APIFOX - Server"
 		},
@@ -47,6 +46,7 @@
 		"heartBeat": "sp_heartbeats",
 		"setMO": "sp_insert_entrada",
 		"setMT": "sp_insert_salida",
+		"setPreMT": "sp_APIFOX_insert_presalida",
 		"isActive": "opratelinfo.dbo.sp_APIFOX_select_suscripcionactiva_paquete",
 		"billingStatus": "opratelinfo.dbo.sp_APIFOX_select_usuariosconcobros",
 		"getActiveUsers": "opratelinfo.dbo.sp_APIFOX_select_usuariosactivos"
@@ -87,6 +87,74 @@
 		"foxfit": {
 			"paqueteid": ["807", "816", "817"],
 			"aplicacionid": ["1173", "1182", "1183"]
+		},
+		"FoxSportsSAT": {
+			"paqueteid": ["814"],
+			"aplicacionid": ["1180"]
+		},
+		"FoxSportsWEB": {
+			"paqueteid": ["815"],
+			"aplicacionid": ["1181"]
+		},
+		"FoxFitSAT": {
+			"paqueteid": ["816"],
+			"aplicacionid": ["1182"],
+			"duplicado:name": "foxfit"
+		},
+		"FoxFitWEB": {
+			"paqueteid": ["817"],
+			"aplicacionid": ["1183"],
+			"duplicado:name": "foxfit"
+		},
+		"FoxFansSAT": {
+			"paqueteid": ["819"],
+			"aplicacionid": ["1185"]
+		},
+		"FoxFansUSSD": {
+			"paqueteid": ["820"],
+			"aplicacionid": ["1186"]
+		},
+		"FoxFansWEB": {
+			"paqueteid": ["821"],
+			"aplicacionid": ["1187"]
+		},
+		"FoxFansFacebook": {
+			"paqueteid": ["822"],
+			"aplicacionid": ["1188"]
+		},
+		"FoxFans": {
+			"paqueteid": ["798"],
+			"aplicacionid": ["1165"],
+			"duplicado:name": "foxfans"
+		},
+		"NatGeoSAT": {
+			"paqueteid": ["823"],
+			"aplicacionid": ["1189"]
+		},
+		"NatGeoUSSD": {
+			"paqueteid": ["824"],
+			"aplicacionid": ["1190"]
+		},
+		"NatGeo WEB": {
+			"paqueteid": ["825"],
+			"aplicacionid": ["1191"]
+		},
+		"NatGeoFacebook": {
+			"paqueteid": ["826"],
+			"aplicacionid": ["1192"]
+		},
+		"NatGeo": {
+			"paqueteid": ["797"],
+			"aplicacionid": ["1164"],
+			"duplicado:name": "natgeo"
+		},
+		"FoxFitAD": {
+			"paqueteid": ["833"],
+			"aplicacionid": ["1199"]
+		},
+		"FoxSportsAD": {
+			"paqueteid": ["834"],
+			"aplicacionid": ["1200"]
 		}
 	},
 	"countryInfo": {
